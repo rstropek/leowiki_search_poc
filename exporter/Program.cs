@@ -3,9 +3,15 @@ using System.Net;
 using System.Text;
 using System.Text.Json.Serialization;
 using HtmlAgilityPack;
+using Microsoft.Extensions.Configuration;
 using ReverseMarkdown;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("tests")]
+
+var configuration = new ConfigurationBuilder()
+    .AddUserSecrets<Program>()
+    .Build();
+var wikiSecret = configuration["WIKI_SECRET"] ?? string.Empty;
 
 var httpClientHandler = new HttpClientHandler
 {
@@ -23,7 +29,7 @@ if (!Directory.Exists(dataDir))
     Directory.CreateDirectory(dataDir);
 }
 
-await client.Login();
+await client.Login(wikiSecret);
 var (_, _, links) = await client.GetPage("start") ?? throw new NotImplementedException();
 var visited = new HashSet<string>();
 var compendium = new Dictionary<string, List<Page>>();
@@ -82,7 +88,7 @@ record Page(string Title, string Content,
 
 static partial class LeoWikiExtensions
 {
-    public static async Task Login(this HttpClient client)
+    public static async Task Login(this HttpClient client, string wikiSecret)
     {
         var res = await client.PostAsync("doku.php?id=start", new FormUrlEncodedContent(
                 new Dictionary<string, string>
@@ -91,7 +97,7 @@ static partial class LeoWikiExtensions
                 { "id", "start" },
                 { "do", "login" },
                 { "u", "r.stropek" },
-                { "p", "Seswahud9" },
+                { "p", wikiSecret },
                 }
             ));
         Debug.Assert(res.StatusCode == HttpStatusCode.Found);
