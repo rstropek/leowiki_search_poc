@@ -92,19 +92,14 @@ async Task<List<string>> SingleVectorSearch(SearchClient searchClient, OpenAICli
     SearchResults<SearchDocument> response = await searchClient.SearchAsync<SearchDocument>(null, searchOptions);
 
     List<string> searchResults = [];
-    // int count = 0;
     await foreach (SearchResult<SearchDocument> result in response.GetResultsAsync())
     {
-        // count++;
-        // Console.WriteLine($"Title: {result.Document["title"]}");
-        // Console.WriteLine($"Score: {result.Score}\n");
-        // Console.WriteLine($"Content: {result.Document["content"]}");
         if (result.Document.TryGetValue("content", out var content) && content != null)
         {
             searchResults.Add(content.ToString()!);
         }
     }
-    // Console.WriteLine($"Total Results: {count}");
+
     return searchResults;
 }
 
